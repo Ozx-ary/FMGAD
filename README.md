@@ -3,6 +3,12 @@
 Few-shot multi-class graph anomaly detection with multi-view subgraph encoding,
 explicit anomaly evidence, and hierarchical prototypes.
 
+## Framework
+
+[![FMGAD framework overview](assets/fmgad-framework.png)](assets/fmgad-framework.pdf)
+
+[View the framework diagram as PDF](assets/fmgad-framework.pdf).
+
 ## Structure
 
 ```text

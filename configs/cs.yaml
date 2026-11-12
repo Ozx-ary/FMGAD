@@ -1,0 +1,208 @@
+project:
+  name: FMGAD
+  version: V2-8
+  stage: split_aware_multiview_encoder_full
+runtime:
+  seed: 42
+  device: auto
+seed: 42
+device: auto
+dataset:
+  name: CS
+  root: datasets
+  normalize_features: true
+anomaly:
+  enabled: true
+  ratio: 0.05
+  type_ratio:
+    structural: 0.4
+    attribute: 0.4
+    hybrid: 0.2
+  structural_edges_per_node: 10
+  attribute_noise_scale: 1.0
+  attribute_mode: gaussian
+split:
+  enabled: true
+  seed: 42
+  train_split: train
+  eval_split: val
+  ratios:
+    train: 0.4
+    val: 0.2
+    test: 0.4
+  save_path: splits/cs_seed42.json
+  load_existing: true
+subgraph:
+  num_hops: 1
+  relabel_nodes: true
+  dry_run_samples: 5
+  safe_mode: true
+  force_num_hops_for_large_graphs: 1
+  max_nodes_per_subgraph: 512
+  max_edges_per_subgraph: 50000
+  neighbor_sample_per_hop: 128
+episode:
+  enabled: true
+  task: multiclass
+  n_way: 4
+  k_shot: 2
+  q_query: 2
+  num_episodes: 3
+  seed: 42
+  default_split: train
+model:
+  name: FMGAD
+  use_evidence: true
+  use_fusion: true
+  use_hierarchy: true
+  use_meta_basis: true
+  use_reconstruction: true
+  use_type_aware_head: true
+encoder:
+  enabled: true
+  type: multiview_center_gcn
+  hidden_dim: 64
+  output_dim: 64
+  num_layers: 2
+  dropout: 0.5
+multiview_encoder:
+  enabled: true
+  structural:
+    type: gcn
+    hidden_dim: 64
+    output_dim: 64
+    num_layers: 2
+    dropout: 0.5
+    enabled: true
+  attribute:
+    type: mlp
+    hidden_dim: 64
+    output_dim: 64
+    num_layers: 2
+    dropout: 0.5
+    enabled: true
+  joint:
+    type: gcn
+    hidden_dim: 64
+    output_dim: 64
+    num_layers: 2
+    dropout: 0.5
+    enabled: true
+  fusion:
+    type: concat_mlp
+    hidden_dim: 128
+    output_dim: 64
+    dropout: 0.1
+    normalize: false
+  pooling:
+    type: center
+  disabled_views: []
+evidence:
+  enabled: true
+  type: matrix_reconstruction
+  normalize: true
+  max_print_samples: 5
+  compute_episode_evidence: true
+reconstruction:
+  enabled: true
+  type: matrix_reconstruction
+  variant: non_parametric
+  normalize: true
+  structure_weight: 1.0
+  attribute_weight: 1.0
+  combined_mode: product
+  eps: 1.0e-08
+  learnable:
+    enabled: false
+    training_policy: normal_only
+    lambda_rec: 0.1
+fusion:
+  enabled: true
+  type: concat_mlp
+  embedding_dim: 64
+  evidence_dim: 3
+  hidden_dim: 64
+  output_dim: 64
+  dropout: 0.1
+  use_for_protonet: true
+type_aware_head:
+  enabled: true
+  input_source: embedding_evidence_prototype_distance
+  embedding_dim: 64
+  evidence_dim: 3
+  prototype_distance_dim: 5
+  hidden_dim: 64
+  num_classes: 4
+  dropout: 0.1
+  lambda_type: 1.0
+  use_query_embeddings: false
+protonet:
+  enabled: true
+hierarchical_prototype:
+  enabled: true
+  use_fused_encoder: true
+  distance: euclidean
+  coarse_loss_weight: 1.0
+  fine_loss_weight: 1.0
+  use_meta_basis: true
+meta_basis:
+  enabled: true
+  mode: parent_delta
+  embedding_dim: 64
+  num_types: 3
+  num_shared_basis: 4
+  num_specific_basis: 2
+  lambda_empirical: 1.0
+  lambda_shared: 0.5
+  lambda_specific: 0.5
+  lambda_parent: 1.0
+  lambda_delta: 0.5
+  normalize: true
+training:
+  enabled: true
+  model: fmgad
+  num_epochs: 100
+  episodes_per_epoch: 10
+  eval_episodes: 10
+  learning_rate: 0.001
+  weight_decay: 0.0005
+  grad_clip: 5.0
+  log_interval: 1
+  eval_interval: 1
+  checkpoint_interval: 5
+  checkpoint_dir: results/cs/seed_42/checkpoints
+  save_best: true
+  metric_for_best: macro_f1
+  metric_mode: max
+  early_stopping:
+    enabled: true
+    monitor: macro_f1
+    mode: max
+    patience: 20
+    min_delta: 0.0001
+  scheduler:
+    enabled: false
+    type: reduce_on_plateau
+    monitor: loss
+    mode: min
+    factor: 0.5
+    patience: 8
+    min_lr: 1.0e-05
+evaluation:
+  fixed_eval_episodes: true
+  episode_cache_dir: outputs/episode_cache
+  regenerate_eval_episodes: false
+  num_classes: 4
+  primary_metric: macro_f1
+  metrics:
+  - accuracy
+  - macro_f1
+  - weighted_f1
+  - balanced_accuracy
+  - per_class_f1
+  - confusion_matrix
+  normal_class_id: 0
+experiment:
+  run_name: cs_seed42
+  output_root: results/cs
+  output_dir: results/cs/seed_42
